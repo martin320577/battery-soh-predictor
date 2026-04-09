@@ -15,17 +15,25 @@ def load_mat_file(filepath):
 
 
 def extract_cycles_from_mat(battery_data):
-    """NASA .mat 파일에서 충방전 사이클 데이터 추출"""
+    """NASA .mat 파일에서 충방전 사이클 데이터 추출
+
+    충전 사이클에는 Capacity가 없으므로, 바로 뒤따르는 방전 사이클의
+    Capacity를 매핑하여 충전 사이클에도 SOH 레이블을 부여한다.
+    """
     cycles = battery_data['cycle']
     charge_cycles = []
     discharge_cycles = []
 
+    # 1차: 모든 사이클 파싱
+    parsed = []
     for i, cycle in enumerate(cycles):
         cycle_type = cycle['type']
+        if cycle_type not in ('charge', 'discharge'):
+            continue
         data = cycle['data']
 
         cycle_dict = {
-            'cycle_number': i + 1,
+            'cycle_number': len(parsed) + 1,
             'type': cycle_type,
         }
 
@@ -33,17 +41,38 @@ def extract_cycles_from_mat(battery_data):
             for field in ['Voltage_measured', 'Current_measured',
                           'Temperature_measured', 'Time']:
                 if field in data:
-                    cycle_dict[field] = np.array(data[field], dtype=float)
+                    val = data[field]
+                    if isinstance(val, np.ndarray):
+                        cycle_dict[field] = val.astype(float)
+                    else:
+                        cycle_dict[field] = np.array([float(val)])
 
             if 'Capacity' in data:
-                cycle_dict['Capacity'] = float(data['Capacity'])
-            elif 'Capacity' in cycle:
-                cycle_dict['Capacity'] = float(cycle['Capacity'])
+                cap = data['Capacity']
+                cycle_dict['Capacity'] = float(cap) if not isinstance(cap, np.ndarray) else float(cap.flat[0])
 
-        if cycle_type == 'charge':
-            charge_cycles.append(cycle_dict)
-        elif cycle_type == 'discharge':
-            discharge_cycles.append(cycle_dict)
+        parsed.append(cycle_dict)
+
+    # 2차: 충전 사이클에 다음 방전 사이클의 Capacity 매핑
+    for idx, cyc in enumerate(parsed):
+        if cyc['type'] == 'charge' and 'Capacity' not in cyc:
+            for j in range(idx + 1, min(idx + 3, len(parsed))):
+                if parsed[j]['type'] == 'discharge' and 'Capacity' in parsed[j]:
+                    cyc['Capacity'] = parsed[j]['Capacity']
+                    break
+
+    # 사이클 번호 재부여 (충방전 쌍 기준)
+    charge_num = 0
+    discharge_num = 0
+    for cyc in parsed:
+        if cyc['type'] == 'charge':
+            charge_num += 1
+            cyc['cycle_number'] = charge_num
+            charge_cycles.append(cyc)
+        elif cyc['type'] == 'discharge':
+            discharge_num += 1
+            cyc['cycle_number'] = discharge_num
+            discharge_cycles.append(cyc)
 
     return charge_cycles, discharge_cycles
 

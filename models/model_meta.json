@@ -1,5 +1,5 @@
 {
-  "best_model": "Random Forest",
+  "best_model": "XGBoost",
   "feature_cols": [
     "voltage_mean",
     "voltage_std",
@@ -22,13 +22,13 @@
     "dvdt_max"
   ],
   "rf_metrics": {
-    "MAE": 1.5925,
-    "RMSE": 2.3105,
-    "R2": 0.9525
+    "MAE": 0.9053,
+    "RMSE": 2.0052,
+    "R2": 0.9669
   },
   "xgb_metrics": {
-    "MAE": 1.6191,
-    "RMSE": 2.3159,
-    "R2": 0.9523
+    "MAE": 0.786,
+    "RMSE": 1.3134,
+    "R2": 0.9858
   }
 }
