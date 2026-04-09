@@ -1,0 +1,34 @@
+{
+  "best_model": "Random Forest",
+  "feature_cols": [
+    "voltage_mean",
+    "voltage_std",
+    "voltage_max",
+    "voltage_min",
+    "voltage_range",
+    "time_3_5_to_4_0",
+    "voltage_slope",
+    "voltage_area",
+    "current_mean",
+    "current_std",
+    "temp_max",
+    "temp_mean",
+    "temp_rise",
+    "temp_std",
+    "internal_resistance",
+    "total_time",
+    "dvdt_mean",
+    "dvdt_std",
+    "dvdt_max"
+  ],
+  "rf_metrics": {
+    "MAE": 1.5925,
+    "RMSE": 2.3105,
+    "R2": 0.9525
+  },
+  "xgb_metrics": {
+    "MAE": 1.6191,
+    "RMSE": 2.3159,
+    "R2": 0.9523
+  }
+}
